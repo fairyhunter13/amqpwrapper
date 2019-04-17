@@ -1,0 +1,13 @@
+version: "3"
+services: 
+  rabbitmq:
+    image: rabbitmq
+    environment:
+       RABBITMQ_HIPE_COMPILE : 0
+       RABBITMQ_VM_MEMORY_HIGH_WATERMARK : 0.49
+    volumes:
+      - "rabbitmq:/var/lib/rabbitmq"
+    ports:
+      - "5672:5672"
+volumes:
+  rabbitmq:
