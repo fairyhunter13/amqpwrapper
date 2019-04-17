@@ -16,11 +16,14 @@ type (
 		InitChannel(fn InitializeChannel, args InitArgs) (err error)
 		Close() (err error)
 		IsClosed() (result bool)
+		isNotValidTypeChan(typeChan uint64) bool
+		isNotValidKey(key string) bool
 	}
 
 	//ConnectionManager defines the manager for connection used in producer and consumer of RabbitMQ.
 	ConnectionManager struct {
 		isClosed uint32 //1 means closed, 0 means not closed.
+		wg       *sync.WaitGroup
 
 		//stores config and url for reconnect
 		url    string
@@ -47,10 +50,10 @@ type (
 //This NewManager need to be tested with integration test.
 func NewManager(url string, config amqp.Config) (manager IConnectionManager, err error) {
 	if config.Heartbeat <= 0 {
-		config.Heartbeat = defaultHeartbeat
+		config.Heartbeat = DefaultHeartbeat
 	}
 	if config.Locale == "" {
-		config.Locale = defaultLocale
+		config.Locale = DefaultLocale
 	}
 	if url == "" {
 		err = ErrInvalidArgs
@@ -63,6 +66,7 @@ func NewManager(url string, config amqp.Config) (manager IConnectionManager, err
 		producer: make(map[string]*Channel, 0),
 		consumer: make(map[string]*Channel, 0),
 		mutex:    new(sync.RWMutex),
+		wg:       new(sync.WaitGroup),
 	}
 
 	err = mgr.connect()
@@ -78,10 +82,13 @@ func NewManager(url string, config amqp.Config) (manager IConnectionManager, err
 
 //CreateChannel creates the channel with connection from inside the map.
 func (p *ConnectionManager) CreateChannel(typeChan uint64) (channel *amqp.Channel, err error) {
-	if typeChan == Producer {
+	switch typeChan {
+	case Producer:
 		channel, err = p.prodConn.Channel()
-	} else if typeChan == Consumer {
+	case Consumer:
 		channel, err = p.consConn.Channel()
+	default:
+		err = ErrInvalidArgs
 	}
 	return
 }
@@ -201,12 +208,10 @@ func (p *ConnectionManager) isNotValidKey(key string) bool {
 
 //reconnect does the reconnection of the rabbitmq manager.
 func (p *ConnectionManager) reconnect() {
-	var wg *sync.WaitGroup
-
-	wg.Add(1)
+	p.wg.Add(1)
 	//Reconnecting for producers.
 	go func() {
-		defer wg.Done()
+		defer p.wg.Done()
 		for {
 			<-p.prodErr
 
@@ -218,10 +223,10 @@ func (p *ConnectionManager) reconnect() {
 			}
 		}
 	}()
-	wg.Add(1)
+	p.wg.Add(1)
 	//Reconnecting for consumers.
 	go func() {
-		defer wg.Done()
+		defer p.wg.Done()
 		for {
 			<-p.consErr
 
@@ -233,7 +238,7 @@ func (p *ConnectionManager) reconnect() {
 			}
 		}
 	}()
-	wg.Wait()
+	p.wg.Wait()
 	return
 }
 
