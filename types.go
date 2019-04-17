@@ -12,8 +12,10 @@ const (
 )
 
 const (
-	defaultHeartbeat = 10 * time.Second
-	defaultLocale    = "en_US"
+	//DefaultHeartbeat defines the default heartbeat used in the config to dial rabbitmq.
+	DefaultHeartbeat = 10 * time.Second
+	//DefaultLocale set the default locale for the connection to rabbitmq.
+	DefaultLocale = "en_US"
 )
 
 const (
