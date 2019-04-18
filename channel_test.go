@@ -92,8 +92,6 @@ func TestNewChannelManager(t *testing.T) {
 				},
 				connMgr: func() (connMgr IConnectionManager) {
 					mockConn := &MockConnectionManager{}
-					mockConn.On("isNotValidTypeChan", Producer).Return(false)
-					mockConn.On("isNotValidKey", "Producer").Return(false)
 					mockConn.On("CreateChannel", Producer).Return(nil, errors.New("Connection or random error"))
 					connMgr = mockConn
 					return

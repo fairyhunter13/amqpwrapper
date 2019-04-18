@@ -16,8 +16,6 @@ type (
 		InitChannel(fn InitializeChannel, args InitArgs) (err error)
 		Close() (err error)
 		IsClosed() (result bool)
-		isNotValidTypeChan(typeChan uint64) bool
-		isNotValidKey(key string) bool
 	}
 
 	//ConnectionManager defines the manager for connection used in producer and consumer of RabbitMQ.
@@ -195,15 +193,7 @@ func (p *ConnectionManager) initChannel(fn InitializeChannel, args InitArgs) (er
 }
 
 func (p *ConnectionManager) isNotValidChannelArgs(args InitArgs) bool {
-	return p.isNotValidKey(args.Key) || p.isNotValidTypeChan(args.TypeChan)
-}
-
-func (p *ConnectionManager) isNotValidTypeChan(typeChan uint64) bool {
-	return typeChan == 0 || typeChan > 2
-}
-
-func (p *ConnectionManager) isNotValidKey(key string) bool {
-	return key == ""
+	return isNotValidKey(args.Key) || isNotValidTypeChan(args.TypeChan)
 }
 
 //reconnect does the reconnection of the rabbitmq manager.
