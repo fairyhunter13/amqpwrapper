@@ -23,14 +23,14 @@ type (
 
 	//ChannelManager defines the manager for channel to ease the publish and consume for a message.
 	ChannelManager struct {
-		connMgr  *ConnectionManager
+		connMgr  IConnectionManager
 		key      string
 		typeChan uint64
 	}
 )
 
 //NewChannelManager creates new channel manager for the given key and channel type.
-func NewChannelManager(key string, typeChan uint64, fn InitializeChannel, connMgr *ConnectionManager) (mgr IChannelManager, err error) {
+func NewChannelManager(key string, typeChan uint64, fn InitializeChannel, connMgr IConnectionManager) (mgr IChannelManager, err error) {
 	if connMgr == nil {
 		err = ErrNilArg
 		return
