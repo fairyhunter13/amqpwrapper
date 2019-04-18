@@ -35,7 +35,7 @@ func NewChannelManager(key string, typeChan uint64, fn InitializeChannel, connMg
 		err = ErrNilArg
 		return
 	}
-	if connMgr.isNotValidTypeChan(typeChan) || connMgr.isNotValidKey(key) {
+	if isNotValidTypeChan(typeChan) || isNotValidKey(key) {
 		err = ErrInvalidArgs
 		return
 	}
