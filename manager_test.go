@@ -11,10 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	uriDial = "amqp://guest:guest@192.168.99.102:5672"
-)
-
 func TestNewManager(t *testing.T) {
 	type args struct {
 		url    string
