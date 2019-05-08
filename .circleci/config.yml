@@ -1,0 +1,77 @@
+version: 2.1
+executors:
+  completedocker:
+    docker:
+      - image: golang:1.12-stretch
+      - image: rabbitmq:3
+        environment: 
+          RABBITMQ_ERLANG_COOKIE: testingwrapper
+    environment:
+      RABBITMQ_HOST: localhost
+      RABBITMQ_ERLANG_COOKIE: testingwrapper
+    working_directory: /go/src/github.com/fairyhunter13/goamqp-wrapper
+commands:
+  installrabbitmq:
+    description: "Installing rabbitmq client by setting up the dependencies"
+    steps:
+      - run:
+          name: "Installing dependencies for rabbitmq client"
+          command: |
+            apt-get update
+            apt-get install curl apt-transport-https gnupg2 -y
+      - run: 
+          name: "Set the apt repositories of erlang"
+          command: |
+            mkdir ~/.gnupg 
+            echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf
+            apt-key adv --keyserver "hkps.pool.sks-keyservers.net" --recv-keys "0x6B73A36E6026DFCA"
+            wget -O - "https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc" | apt-key add -
+            echo "deb http://dl.bintray.com/rabbitmq-erlang/debian stretch erlang" > /etc/apt/sources.list.d/bintray.erlang.list
+      - run:
+          name: "Set the apt repositories of rabbitmqclient to packagecloud.io"
+          command: |
+            wget -O - "https://packagecloud.io/rabbitmq/rabbitmq-server/gpgkey" | apt-key add -
+            curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.deb.sh | bash
+      - run:
+          name: "Installing erlang packages and rabbitmq client"
+          command: |
+            apt-get update
+            apt-get install -y erlang-base-hipe \
+              erlang-asn1 erlang-crypto erlang-eldap erlang-ftp erlang-inets \
+              erlang-mnesia erlang-os-mon erlang-parsetools erlang-public-key \
+              erlang-runtime-tools erlang-snmp erlang-ssl \
+              erlang-syntax-tools erlang-tftp erlang-tools erlang-xmerl
+            apt-get install -y rabbitmq-server
+jobs:
+  testandcoverage:
+    executor: completedocker
+    steps:
+      - checkout
+      - installrabbitmq
+      - run:
+          name: "Waiting rabbitmq to be up"
+          command: |
+            while ! ( rabbitmqctl status --erlang-cookie=$RABBITMQ_ERLANG_COOKIE ); do
+              echo "Reconnecting in 3 seconds ..."
+              sleep 3
+            done
+      - run: 
+          name: "Getting dependencies for testing"
+          command: go get -v -t -d ./...
+      - run:
+          name: "Getting dependencies for coverage"
+          command: go get github.com/mattn/goveralls
+      - run: 
+          name: "Integration testing and generate coverage"
+          command: go test -v -cover -race -coverprofile=coverage.out -tags=integration  ./... 
+      - run: 
+          name: "Uploading to coveralls.io"
+          command: goveralls -coverprofile=coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
+workflows:
+   version: 2
+   checking:
+     jobs:
+       - testandcoverage:
+          filters:
+            branches:
+              only: master
