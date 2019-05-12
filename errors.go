@@ -1,4 +1,4 @@
-package rabbitmq
+package amqpwrapper
 
 import "errors"
 
