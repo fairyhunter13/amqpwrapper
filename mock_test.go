@@ -1,4 +1,6 @@
-package rabbitmq
+// +build integration
+
+package amqpwrapper
 
 import amqp "github.com/streadway/amqp"
 import mock "github.com/stretchr/testify/mock"

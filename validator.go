@@ -1,4 +1,4 @@
-package rabbitmq
+package amqpwrapper
 
 func isNotValidTypeChan(typeChan uint64) bool {
 	return typeChan == 0 || typeChan > 2

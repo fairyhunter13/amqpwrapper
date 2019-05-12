@@ -1,4 +1,4 @@
-package rabbitmq
+package amqpwrapper
 
 import "github.com/streadway/amqp"
 
@@ -62,6 +62,7 @@ func NewChannelManager(key string, typeChan uint64, fn InitializeChannel, connMg
 }
 
 //Publish defines the Publish function inside amqp.Channel.
+//See github.com/streadway/amqp for more details.
 func (m *ChannelManager) Publish(exchange, key string, mandatory, immediate bool, msg amqp.Publishing) (err error) {
 	mqChan, err := m.connMgr.GetChannel(m.key, m.typeChan)
 	if err != nil {
@@ -72,6 +73,7 @@ func (m *ChannelManager) Publish(exchange, key string, mandatory, immediate bool
 }
 
 //Consume defines the Consume function inside amqp.Channel.
+//See github.com/streadway/amqp for more details.
 func (m *ChannelManager) Consume(queue, consumer string, autoAck, exclusive, noLocal, noWait bool, args amqp.Table) (deliveryChan <-chan amqp.Delivery, err error) {
 	mqChan, err := m.connMgr.GetChannel(m.key, m.typeChan)
 	if err != nil {

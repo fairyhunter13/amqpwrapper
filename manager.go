@@ -1,4 +1,4 @@
-package rabbitmq
+package amqpwrapper
 
 import (
 	"sync"
@@ -9,7 +9,7 @@ import (
 
 type (
 
-	//IConnectionManager defines the contract for the ConnectionManager.
+	//IConnectionManager defines the contract to manage connection in this package.
 	IConnectionManager interface {
 		GetChannel(key string, typeChan uint64) (channel *amqp.Channel, err error)
 		CreateChannel(typeChan uint64) (channel *amqp.Channel, err error)
@@ -44,8 +44,7 @@ type (
 	}
 )
 
-//NewManager defines the manager for producer.
-//This NewManager need to be tested with integration test.
+//NewManager creates connection manager to be used to manage the lifecycle of connections.
 func NewManager(url string, config amqp.Config) (manager IConnectionManager, err error) {
 	if config.Heartbeat <= 0 {
 		config.Heartbeat = DefaultHeartbeat
@@ -78,7 +77,8 @@ func NewManager(url string, config amqp.Config) (manager IConnectionManager, err
 	return
 }
 
-//CreateChannel creates the channel with connection from inside the map.
+//CreateChannel creates the channel with connection that has been initialized before.
+//CreateChannel initialize channel based on type of channel in the input.
 func (p *ConnectionManager) CreateChannel(typeChan uint64) (channel *amqp.Channel, err error) {
 	switch typeChan {
 	case Producer:

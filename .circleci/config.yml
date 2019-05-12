@@ -9,7 +9,7 @@ executors:
     environment:
       RABBITMQ_HOST: localhost
       RABBITMQ_ERLANG_COOKIE: testingwrapper
-    working_directory: /go/src/github.com/fairyhunter13/goamqp-wrapper
+    working_directory: /go/src/github.com/fairyhunter13/amqpwrapper
 commands:
   installrabbitmq:
     description: "Installing rabbitmq client by setting up the dependencies"
@@ -60,7 +60,9 @@ jobs:
           command: go get -v -t -d ./...
       - run:
           name: "Getting dependencies for coverage"
-          command: go get github.com/mattn/goveralls
+          command: |
+            go get github.com/mattn/goveralls
+            go get github.com/stretchr/testify/assert
       - run: 
           name: "Integration testing and generate coverage"
           command: go test -v -cover -race -coverprofile=coverage.out -tags=integration  ./... 
