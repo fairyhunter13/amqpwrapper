@@ -114,7 +114,7 @@ func (p *ConnectionManager) GetChannel(key string, typeChan uint64) (channel *am
 
 //InitChannel initialize channel with fn and add it to the map to recover or reinit.
 func (p *ConnectionManager) InitChannel(fn InitializeChannel, args InitArgs) (err error) {
-	if args.Channel == nil {
+	if args.Channel == nil || fn == nil {
 		err = ErrNilArg
 		return
 	}
