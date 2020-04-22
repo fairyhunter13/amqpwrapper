@@ -1,5 +1,7 @@
 package amqpwrapper
 
+//go:generate mockery -all -inpkg -recursive -testonly
+
 import (
 	"sync"
 	"sync/atomic"
@@ -14,6 +16,7 @@ type (
 		GetChannel(key string, typeChan uint64) (channel *amqp.Channel, err error)
 		CreateChannel(typeChan uint64) (channel *amqp.Channel, err error)
 		InitChannel(fn InitializeChannel, args InitArgs) (err error)
+		InitChannelAndGet(fn InitializeChannel, args InitArgs) (channel *amqp.Channel, err error)
 		Close() (err error)
 		IsClosed() (result bool)
 	}
@@ -123,8 +126,35 @@ func (p *ConnectionManager) InitChannel(fn InitializeChannel, args InitArgs) (er
 		return
 	}
 	p.mutex.Lock()
-	defer p.mutex.Unlock()
 	err = p.initChannel(fn, args)
+	p.mutex.Unlock()
+	return
+}
+
+//InitChannelAndGet initialize channel with fn and add it to the map to recover or reinit, then return the created channel.
+func (p *ConnectionManager) InitChannelAndGet(fn InitializeChannel, args InitArgs) (ch *amqp.Channel, err error) {
+	var tempChan *amqp.Channel
+	if fn == nil {
+		err = ErrNilArg
+		return
+	}
+	if p.isNotValidChannelArgs(args) {
+		err = ErrInvalidArgs
+		return
+	}
+	if args.Channel == nil {
+		tempChan, err = p.CreateChannel(args.TypeChan)
+		if err != nil {
+			return
+		}
+	}
+	p.mutex.Lock()
+	err = p.initChannel(fn, args)
+	p.mutex.Unlock()
+	if err != nil {
+		return
+	}
+	ch = tempChan
 	return
 }
 

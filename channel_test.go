@@ -1,5 +1,3 @@
-// +build integration
-
 package amqpwrapper
 
 import (
@@ -93,7 +91,7 @@ func TestNewChannelManager(t *testing.T) {
 					return
 				},
 				connMgr: func() (connMgr IConnectionManager) {
-					mockConn := &MockConnectionManager{}
+					mockConn := &MockIConnectionManager{}
 					mockConn.On("CreateChannel", Producer).Return(nil, errors.New("Connection or random error"))
 					connMgr = mockConn
 					return
@@ -301,7 +299,7 @@ func TestChannelManager_IsClosed(t *testing.T) {
 			want: true,
 			fields: fields{
 				connMgr: func() (connMgr IConnectionManager) {
-					mgr := new(MockConnectionManager)
+					mgr := new(MockIConnectionManager)
 					mgr.On("IsClosed").Return(true)
 					connMgr = mgr
 					return
@@ -313,7 +311,7 @@ func TestChannelManager_IsClosed(t *testing.T) {
 			want: false,
 			fields: fields{
 				connMgr: func() (connMgr IConnectionManager) {
-					mgr := new(MockConnectionManager)
+					mgr := new(MockIConnectionManager)
 					mgr.On("IsClosed").Return(false)
 					connMgr = mgr
 					return
