@@ -65,7 +65,7 @@ jobs:
             go get github.com/stretchr/testify/assert
       - run:
           name: "Integration testing and generate coverage"
-          command: go test -v -cover -race -coverprofile=coverage.out -tags=integration  ./...
+          command: go test -v -cover -race -coverprofile=coverage.out ./...
       - run:
           name: "Uploading to coveralls.io"
           command: goveralls -coverprofile=coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
