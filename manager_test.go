@@ -1,5 +1,3 @@
-// +build integration
-
 package amqpwrapper
 
 import (
@@ -681,4 +679,131 @@ func TestConnectError(t *testing.T) {
 		err := mgr.connectConsumer()
 		assert.NotNil(t, err, "connectConsumer error should not be nil")
 	})
+}
+
+func TestConnectionManager_InitChannelAndGet(t *testing.T) {
+	type args struct {
+		fn   InitializeChannel
+		args func() InitArgs
+	}
+	tests := []struct {
+		name    string
+		p       func() IConnectionManager
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "Function channel is nil",
+			p: func() IConnectionManager {
+				mgr, err := NewManager(uriDial, amqp.Config{})
+				assert.Nilf(t, err, "Error in initiating new manager: %s", err)
+				return mgr
+			},
+			args: args{
+				args: func() InitArgs {
+					return InitArgs{
+						Key:      "Producer",
+						TypeChan: Producer,
+					}
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Channel type is invalid",
+			p: func() IConnectionManager {
+				mgr, err := NewManager(uriDial, amqp.Config{})
+				assert.Nilf(t, err, "Error in initiating new manager: %s", err)
+				return mgr
+			},
+			args: args{
+				fn: func(amqpChan *amqp.Channel) (err error) {
+					return
+				},
+				args: func() InitArgs {
+					return InitArgs{
+						Key:      "Producer",
+						TypeChan: 500,
+					}
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Connection is already closed",
+			p: func() IConnectionManager {
+				mgr, err := NewManager(uriDial, amqp.Config{})
+				assert.Nilf(t, err, "Error in initiating new manager: %s", err)
+				defer mgr.Close()
+				return mgr
+			},
+			args: args{
+				fn: func(amqpChan *amqp.Channel) (err error) {
+					return
+				},
+				args: func() InitArgs {
+					return InitArgs{
+						Key:      "Producer",
+						TypeChan: Producer,
+					}
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Init channel returns error",
+			p: func() IConnectionManager {
+				mgr, err := NewManager(uriDial, amqp.Config{})
+				assert.Nilf(t, err, "Error in initiating new manager: %s", err)
+				return mgr
+			},
+			args: args{
+				fn: func(amqpChan *amqp.Channel) (err error) {
+					err = errors.New("RANDOM")
+					return
+				},
+				args: func() InitArgs {
+					return InitArgs{
+						Key:      "Producer",
+						TypeChan: Producer,
+					}
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "Initialize channel with nil channel",
+			p: func() IConnectionManager {
+				mgr, err := NewManager(uriDial, amqp.Config{})
+				assert.Nilf(t, err, "Error in initiating new manager: %s", err)
+				return mgr
+			},
+			args: args{
+				fn: func(amqpChan *amqp.Channel) (err error) {
+					return
+				},
+				args: func() InitArgs {
+					return InitArgs{
+						Key:      "Producer",
+						TypeChan: Producer,
+					}
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotChannel, err := tt.p().InitChannelAndGet(tt.args.fn, tt.args.args())
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ConnectionManager.InitChannelAndGet() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				assert.Nil(t, gotChannel, "The channel must be nil value")
+			} else {
+				assert.NotNil(t, gotChannel, "The channel must not be nil")
+			}
+		})
+	}
 }
