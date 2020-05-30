@@ -125,15 +125,12 @@ func (p *ConnectionManager) InitChannel(fn InitializeChannel, args InitArgs) (er
 		err = ErrInvalidArgs
 		return
 	}
-	p.mutex.Lock()
-	err = p.initChannel(fn, args)
-	p.mutex.Unlock()
+	err = p.lockInitChannel(fn, args)
 	return
 }
 
 //InitChannelAndGet initialize channel with fn and add it to the map to recover or reinit, then return the created channel.
 func (p *ConnectionManager) InitChannelAndGet(fn InitializeChannel, args InitArgs) (ch *amqp.Channel, err error) {
-	var tempChan *amqp.Channel
 	if fn == nil {
 		err = ErrNilArg
 		return
@@ -142,20 +139,34 @@ func (p *ConnectionManager) InitChannelAndGet(fn InitializeChannel, args InitArg
 		err = ErrInvalidArgs
 		return
 	}
+	ch, err = p.initChannelAndGet(fn, args, true)
+	return
+}
+
+func (p *ConnectionManager) initChannelAndGet(fn InitializeChannel, args InitArgs, withLock bool) (ch *amqp.Channel, err error) {
 	if args.Channel == nil {
-		tempChan, err = p.CreateChannel(args.TypeChan)
+		args.Channel, err = p.CreateChannel(args.TypeChan)
 		if err != nil {
 			return
 		}
 	}
-	p.mutex.Lock()
-	err = p.initChannel(fn, args)
-	p.mutex.Unlock()
+	if withLock {
+		err = p.lockInitChannel(fn, args)
+	} else {
+		err = p.initChannel(fn, args)
+	}
 	if err != nil {
 		return
 	}
-	ch = tempChan
+	ch = args.Channel
 	return
+}
+
+func (p *ConnectionManager) lockInitChannel(fn InitializeChannel, args InitArgs) (err error) {
+	p.mutex.Lock()
+	err = p.initChannel(fn, args)
+	p.mutex.Unlock()
+	return err
 }
 
 //Close close the connection and channel.
@@ -263,23 +274,15 @@ func (p *ConnectionManager) reconnect() {
 }
 
 func (p *ConnectionManager) reinitConsumer() (err error) {
-	var (
-		newChan *amqp.Channel
-	)
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	for key, customChannel := range p.consumer {
 		customChannel.innerChan.Close()
-		newChan, err = p.consConn.Channel()
-		if err != nil {
-			return
-		}
 		argsChan := InitArgs{
 			Key:      key,
 			TypeChan: Consumer,
-			Channel:  newChan,
 		}
-		err = p.initChannel(customChannel.fn, argsChan)
+		_, err = p.initChannelAndGet(customChannel.fn, argsChan, false)
 		if err != nil {
 			return
 		}
@@ -288,23 +291,15 @@ func (p *ConnectionManager) reinitConsumer() (err error) {
 }
 
 func (p *ConnectionManager) reinitProducer() (err error) {
-	var (
-		newChan *amqp.Channel
-	)
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	for key, customChannel := range p.producer {
 		customChannel.innerChan.Close()
-		newChan, err = p.prodConn.Channel()
-		if err != nil {
-			return
-		}
 		argsChan := InitArgs{
 			Key:      key,
 			TypeChan: Producer,
-			Channel:  newChan,
 		}
-		err = p.initChannel(customChannel.fn, argsChan)
+		_, err = p.initChannelAndGet(customChannel.fn, argsChan, false)
 		if err != nil {
 			return
 		}
