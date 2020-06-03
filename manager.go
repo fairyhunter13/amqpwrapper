@@ -164,8 +164,8 @@ func (p *ConnectionManager) initChannelAndGet(fn InitializeChannel, args InitArg
 
 func (p *ConnectionManager) lockInitChannel(fn InitializeChannel, args InitArgs) (err error) {
 	p.mutex.Lock()
+	defer p.mutex.Unlock()
 	err = p.initChannel(fn, args)
-	p.mutex.Unlock()
 	return err
 }
 
