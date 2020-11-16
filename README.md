@@ -1,3 +1,21 @@
+بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ
+
+<br/>
+
+السَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ
+
+<br/>
+
+ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ
+
+ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ
+
+ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ
+
+<br/>
+
+اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ ، وَعَلَى آلِ مُحَمَّدٍ ، كَمَا صَلَّيْتَ عَلَى إِبْرَاهِيمَ وَعَلَى آلِ إِبْرَاهِيمَ ، إِنَّكَ حَمِيدٌ مَجِيدٌ ، اللَّهُمَّ بَارِكْ عَلَى مُحَمَّدٍ ، وَعَلَى آلِ مُحَمَّدٍ ، كَمَا بَارَكْتَ عَلَى إِبْرَاهِيمَ ، وَعَلَى آلِ إِبْرَاهِيمَ ، إِنَّكَ حَمِيدٌ مَجِيدٌ
+
 # Amqpwrapper
 [![CircleCI](https://circleci.com/gh/fairyhunter13/amqpwrapper/tree/master.svg?style=svg)](https://circleci.com/gh/fairyhunter13/amqpwrapper/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/fairyhunter13/amqpwrapper/badge.svg?branch=master)](https://coveralls.io/github/fairyhunter13/amqpwrapper?branch=master)
