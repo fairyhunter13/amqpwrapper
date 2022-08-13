@@ -13,3 +13,7 @@
 
 # Ignoring codealike file
 codealike.json
+
+# Editor Configs
+.vscode
+.idea

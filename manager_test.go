@@ -2,7 +2,6 @@ package amqpwrapper
 
 import (
 	"errors"
-	"sync"
 	"testing"
 
 	"github.com/streadway/amqp"
@@ -433,8 +432,6 @@ func TestSimulateReconnectManager(t *testing.T) {
 		config:   config,
 		producer: make(map[string]*Channel, 0),
 		consumer: make(map[string]*Channel, 0),
-		mutex:    new(sync.RWMutex),
-		wg:       new(sync.WaitGroup),
 	}
 	confirmChan := make(chan string, 1)
 	mgr.connect()
@@ -459,8 +456,6 @@ func TestReinitConsumerProducer(t *testing.T) {
 			config:   config,
 			producer: make(map[string]*Channel, 0),
 			consumer: make(map[string]*Channel, 0),
-			mutex:    new(sync.RWMutex),
-			wg:       new(sync.WaitGroup),
 		}
 		mgr.connect()
 		newFn := func(amqpChan *amqp.Channel) (err error) {
@@ -484,7 +479,7 @@ func TestReinitConsumerProducer(t *testing.T) {
 		}
 		err = mgr.InitChannel(newFn, arg)
 		assert.Nilf(t, err, "Error in initializing the channel: %s", err)
-		//Simulate reinit in here
+		// Simulate reinit in here
 		err = mgr.reinitConsumer()
 		assert.Nilf(t, err, "Error in reinitConsumer should be nil: %s", err)
 		err = mgr.reinitProducer()
@@ -497,8 +492,6 @@ func TestReinitConsumerProducer(t *testing.T) {
 			config:   config,
 			producer: make(map[string]*Channel, 0),
 			consumer: make(map[string]*Channel, 0),
-			mutex:    new(sync.RWMutex),
-			wg:       new(sync.WaitGroup),
 		}
 		mgr.connect()
 		newFn := func(amqpChan *amqp.Channel) (err error) {
@@ -522,9 +515,9 @@ func TestReinitConsumerProducer(t *testing.T) {
 		}
 		err = mgr.InitChannel(newFn, arg)
 		assert.Nilf(t, err, "Error in initializing the channel: %s", err)
-		//Simulate reinit in here
+		// Simulate reinit in here
 		go func() {
-			//Destroy consumer connection
+			// Destroy consumer connection
 			mgr.consConn.Close()
 		}()
 		err = mgr.reinitConsumer()
@@ -537,8 +530,6 @@ func TestReinitConsumerProducer(t *testing.T) {
 			config:   config,
 			producer: make(map[string]*Channel, 0),
 			consumer: make(map[string]*Channel, 0),
-			mutex:    new(sync.RWMutex),
-			wg:       new(sync.WaitGroup),
 		}
 		mgr.connect()
 		newFn := func(amqpChan *amqp.Channel) (err error) {
@@ -562,8 +553,8 @@ func TestReinitConsumerProducer(t *testing.T) {
 		}
 		err = mgr.InitChannel(newFn, arg)
 		assert.Nilf(t, err, "Error in initializing the channel: %s", err)
-		//Simulate reinit in here
-		//Simulate init function error
+		// Simulate reinit in here
+		// Simulate init function error
 		mgr.consumer["Consumer"].fn = func(amqpChan *amqp.Channel) (err error) {
 			err = errors.New("Random Error")
 			return
@@ -578,8 +569,6 @@ func TestReinitConsumerProducer(t *testing.T) {
 			config:   config,
 			producer: make(map[string]*Channel, 0),
 			consumer: make(map[string]*Channel, 0),
-			mutex:    new(sync.RWMutex),
-			wg:       new(sync.WaitGroup),
 		}
 		mgr.connect()
 		newFn := func(amqpChan *amqp.Channel) (err error) {
@@ -603,9 +592,9 @@ func TestReinitConsumerProducer(t *testing.T) {
 		}
 		err = mgr.InitChannel(newFn, arg)
 		assert.Nilf(t, err, "Error in initializing the channel: %s", err)
-		//Simulate reinit in here
+		// Simulate reinit in here
 		go func() {
-			//Destroy consumer connection
+			// Destroy consumer connection
 			mgr.prodConn.Close()
 		}()
 		err = mgr.reinitProducer()
@@ -618,8 +607,6 @@ func TestReinitConsumerProducer(t *testing.T) {
 			config:   config,
 			producer: make(map[string]*Channel, 0),
 			consumer: make(map[string]*Channel, 0),
-			mutex:    new(sync.RWMutex),
-			wg:       new(sync.WaitGroup),
 		}
 		mgr.connect()
 		newFn := func(amqpChan *amqp.Channel) (err error) {
@@ -643,8 +630,8 @@ func TestReinitConsumerProducer(t *testing.T) {
 		}
 		err = mgr.InitChannel(newFn, arg)
 		assert.Nilf(t, err, "Error in initializing the channel: %s", err)
-		//Simulate reinit in here
-		//Simulate init function error
+		// Simulate reinit in here
+		// Simulate init function error
 		mgr.producer["Producer"].fn = func(amqpChan *amqp.Channel) (err error) {
 			err = errors.New("Random Error")
 			return
@@ -661,8 +648,6 @@ func TestConnectError(t *testing.T) {
 			config:   amqp.Config{},
 			producer: make(map[string]*Channel, 0),
 			consumer: make(map[string]*Channel, 0),
-			mutex:    new(sync.RWMutex),
-			wg:       new(sync.WaitGroup),
 		}
 		err := mgr.connectProducer()
 		assert.NotNil(t, err, "connectProducer error should not be nil")
@@ -673,8 +658,6 @@ func TestConnectError(t *testing.T) {
 			config:   amqp.Config{},
 			producer: make(map[string]*Channel, 0),
 			consumer: make(map[string]*Channel, 0),
-			mutex:    new(sync.RWMutex),
-			wg:       new(sync.WaitGroup),
 		}
 		err := mgr.connectConsumer()
 		assert.NotNil(t, err, "connectConsumer error should not be nil")
