@@ -11,7 +11,7 @@ import (
 
 type (
 
-	//IConnectionManager defines the contract to manage connection in this package.
+	// IConnectionManager defines the contract to manage connection in this package.
 	IConnectionManager interface {
 		GetChannel(key string, typeChan uint64) (channel *amqp.Channel, err error)
 		CreateChannel(typeChan uint64) (channel *amqp.Channel, err error)
@@ -21,16 +21,16 @@ type (
 		IsClosed() (result bool)
 	}
 
-	//ConnectionManager defines the manager for connection used in producer and consumer of RabbitMQ.
+	// ConnectionManager defines the manager for connection used in producer and consumer of RabbitMQ.
 	ConnectionManager struct {
-		isClosed uint32 //1 means closed, 0 means not closed.
-		wg       *sync.WaitGroup
+		isClosed uint32 // 1 means closed, 0 means not closed.
+		wg       sync.WaitGroup
 
-		//stores config and url for reconnect
+		// stores config and url for reconnect
 		url    string
 		config amqp.Config
-		mutex  *sync.RWMutex
-		//mutex protects the following field.
+		mutex  sync.RWMutex
+		// mutex protects the following field.
 		producer map[string]*Channel
 		consumer map[string]*Channel
 		prodConn *amqp.Connection
@@ -39,7 +39,7 @@ type (
 		consErr  chan *amqp.Error
 	}
 
-	//InitArgs defines the arguments for InitChannel function in this package.
+	// InitArgs defines the arguments for InitChannel function in this package.
 	InitArgs struct {
 		Key      string
 		TypeChan uint64
@@ -47,7 +47,7 @@ type (
 	}
 )
 
-//NewManager creates connection manager to be used to manage the lifecycle of connections.
+// NewManager creates connection manager to be used to manage the lifecycle of connections.
 func NewManager(url string, config amqp.Config) (manager IConnectionManager, err error) {
 	if config.Heartbeat <= 0 {
 		config.Heartbeat = DefaultHeartbeat
@@ -65,8 +65,6 @@ func NewManager(url string, config amqp.Config) (manager IConnectionManager, err
 		config:   config,
 		producer: make(map[string]*Channel, 0),
 		consumer: make(map[string]*Channel, 0),
-		mutex:    new(sync.RWMutex),
-		wg:       new(sync.WaitGroup),
 	}
 
 	err = mgr.connect()
@@ -80,8 +78,8 @@ func NewManager(url string, config amqp.Config) (manager IConnectionManager, err
 	return
 }
 
-//CreateChannel creates the channel with connection that has been initialized before.
-//CreateChannel initialize channel based on type of channel in the input.
+// CreateChannel creates the channel with connection that has been initialized before.
+// CreateChannel initialize channel based on type of channel in the input.
 func (p *ConnectionManager) CreateChannel(typeChan uint64) (channel *amqp.Channel, err error) {
 	switch typeChan {
 	case Producer:
@@ -94,7 +92,7 @@ func (p *ConnectionManager) CreateChannel(typeChan uint64) (channel *amqp.Channe
 	return
 }
 
-//GetChannel returns the channel that is stored inside the map in the manager.
+// GetChannel returns the channel that is stored inside the map in the manager.
 func (p *ConnectionManager) GetChannel(key string, typeChan uint64) (channel *amqp.Channel, err error) {
 	var (
 		customChannel *Channel
@@ -115,7 +113,7 @@ func (p *ConnectionManager) GetChannel(key string, typeChan uint64) (channel *am
 	return
 }
 
-//InitChannel initialize channel with fn and add it to the map to recover or reinit.
+// InitChannel initialize channel with fn and add it to the map to recover or reinit.
 func (p *ConnectionManager) InitChannel(fn InitializeChannel, args InitArgs) (err error) {
 	if args.Channel == nil || fn == nil {
 		err = ErrNilArg
@@ -129,7 +127,7 @@ func (p *ConnectionManager) InitChannel(fn InitializeChannel, args InitArgs) (er
 	return
 }
 
-//InitChannelAndGet initialize channel with fn and add it to the map to recover or reinit, then return the created channel.
+// InitChannelAndGet initialize channel with fn and add it to the map to recover or reinit, then return the created channel.
 func (p *ConnectionManager) InitChannelAndGet(fn InitializeChannel, args InitArgs) (ch *amqp.Channel, err error) {
 	if fn == nil {
 		err = ErrNilArg
@@ -169,7 +167,7 @@ func (p *ConnectionManager) lockInitChannel(fn InitializeChannel, args InitArgs)
 	return err
 }
 
-//Close close the connection and channel.
+// Close close the connection and channel.
 func (p *ConnectionManager) Close() (err error) {
 	atomic.StoreUint32(&p.isClosed, Closed)
 	err = p.prodConn.Close()
@@ -177,12 +175,12 @@ func (p *ConnectionManager) Close() (err error) {
 	return
 }
 
-//IsClosed defines the state of connection in manager.
+// IsClosed defines the state of connection in manager.
 func (p *ConnectionManager) IsClosed() bool {
 	return atomic.LoadUint32(&p.isClosed) == Closed
 }
 
-//connect creates new connection and add close notifier to trigger reinit or reconnect.
+// connect creates new connection and add close notifier to trigger reinit or reconnect.
 func (p *ConnectionManager) connect() (err error) {
 	err = p.connectProducer()
 	if err != nil {
@@ -237,10 +235,10 @@ func (p *ConnectionManager) isNotValidChannelArgs(args InitArgs) bool {
 	return isNotValidKey(args.Key) || isNotValidTypeChan(args.TypeChan)
 }
 
-//reconnect does the reconnection of the rabbitmq manager.
+// reconnect does the reconnection of the rabbitmq manager.
 func (p *ConnectionManager) reconnect() {
 	p.wg.Add(1)
-	//Reconnecting for producers.
+	// Reconnecting for producers.
 	go func() {
 		defer p.wg.Done()
 		for {
@@ -255,7 +253,7 @@ func (p *ConnectionManager) reconnect() {
 		}
 	}()
 	p.wg.Add(1)
-	//Reconnecting for consumers.
+	// Reconnecting for consumers.
 	go func() {
 		defer p.wg.Done()
 		for {
